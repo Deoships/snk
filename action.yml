@@ -1,10 +1,6 @@
 name: "generate-snake-game-from-github-contribution-grid"
 description: "Generates a snake game from a github user contributions grid. Output the animation as gif or svg"
-author: "platane"
-
-runs:
-  using: docker
-  image: docker://platane/snk@sha256:1c8a0b51a75ad8cf36b7defddd2187bdbb92bbbb5521a9e6cc5df795b00fc590
+author: "Deoships" # Замени на свое имя
 
 inputs:
   github_user_name:
@@ -24,11 +20,15 @@ inputs:
 
       - palette:      A preset of color, one of [github, github-dark, github-light]
       - color_snake:  Color of the snake
-      - color_dots:   Coma separated list of dots color. 
+      - color_dots:   Coma separated list of dots color.
                       The first one is 0 contribution, then it goes from the low contribution to the highest.
                       Exactly 5 colors are expected.
-      example:
-        outputs: |
-          dark.svg?palette=github-dark&color_snake=blue
-          light.svg?color_snake=#7845ab
-          ocean.gif?color_snake=orange&color_dots=#bfd6f6,#8dbdff,#64a1f4,#4b91f1,#3c7dd9
+    example:
+      outputs: |
+        dark.svg?palette=github-dark&color_snake=blue
+        light.svg?color_snake=#7845ab
+        ocean.gif?color_snake=orange&color_dots=#bfd6f6,#8dbdff,#64a1f4,#4b91f1,#3c7dd9
+
+runs:
+  using: "node16"  # Укажи версию Node.js
+  main: "index.js"   # Укажи точку входа - твой index.js
