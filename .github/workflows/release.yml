@@ -27,12 +27,10 @@ jobs:
         run: npm test
       - name: Change colors in palettes.ts
         run: |
-          # Replace red with cyan (example)
-          sed -i "s/#FF0000/#00FFFF/g" packages/action/palettes.ts
-          # Replace green with blue (example)
-          sed -i "s/#00FF00/#0000FF/g" packages/action/palettes.ts
-          # Add more 'sed' commands to change other colors as needed
-          # Be sure to use the correct paths and hex codes
+          sed -i "s/#COLOR1/#70a5fd/g" packages/action/palettes.ts
+          sed -i "s/#COLOR2/#70a5fd/g" packages/action/palettes.ts
+          sed -i "s/#COLOR3/#70a5fd/g" packages/action/palettes.ts
+          cache: false
       - name: Publish to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
