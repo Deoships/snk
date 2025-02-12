@@ -1,90 +1,58 @@
-name: release
+name: Release
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: |
-          New version for the release
-          If the version is in format <major>.<minor>.<patch> a new release is emitted.
-          Otherwise for other format ( for example <major>.<minor>.<patch>-beta.1 ), a prerelease is emitted.
-        default: "0.0.1"
-        required: true
-        type: string
-      description:
-        description: "Version description"
-        type: string
+  push:
+    branches:
+      - main
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
-
-      - uses: docker/setup-qemu-action@v2
-
-      - uses: docker/setup-buildx-action@v2
-
-      - uses: docker/login-action@v2
+      - name: Extract version
+        id: extract_version
+        run: |
+          VERSION=$(cat package.json | jq -r .version)
+          echo "::set-output name=version::$VERSION"
+      - name: Use Node.js 16
+        uses: actions/setup-node@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: build and publish the docker image
-        uses: docker/build-push-action@v4
-        id: docker-build
+          node-version: 16
+      - name: Install dependencies
+        run: npm install
+      - name: Build
+        run: npm run build:action
+      - name: Test
+        run: npm test
+      - name: Change colors in palettes.ts
+        run: |
+          # Replace red with cyan (example)
+          sed -i "s/#FF0000/#00FFFF/g" packages/action/palettes.ts
+          # Replace green with blue (example)
+          sed -i "s/#00FF00/#0000FF/g" packages/action/palettes.ts
+          # Add more 'sed' commands to change other colors as needed
+          # Be sure to use the correct paths and hex codes
+      - name: Publish to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v5
         with:
+          context: .
           push: true
           tags: |
-            platane/snk:${{ github.sha }}
-            platane/snk:${{ github.event.inputs.version }}
-
-      - name: update action.yml to point to the newly created docker image
-        run: |
-          sed -i "s/image: .*/image: docker:\/\/platane\/snk@${{ steps.docker-build.outputs.digest }}/" action.yml
-
-      - uses: actions/setup-node@v3
-        with:
-          cache: yarn
-          node-version: 20
-
-      - name: build svg-only action
-        run: |
-          yarn install --frozen-lockfile
-          npm run build:action
-          rm -r svg-only/dist
-          mv packages/action/dist svg-only/dist
-
-      - name: bump package version
-        run: yarn version --no-git-tag-version --new-version ${{ github.event.inputs.version }}
-
-      - name: push new build, tag version and push
-        id: push-tags
-        run: |
-          VERSION=${{ github.event.inputs.version }}
-
-          git config --global user.email "bot@platane.me"
-          git config --global user.name "release bot"
-          git add package.json svg-only/dist action.yml
-          git commit -m "📦 $VERSION"
-          git tag v$VERSION
-          git push origin main --tags
-
-          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            git tag v$( echo $VERSION | cut -d. -f 1-1 )
-            git tag v$( echo $VERSION | cut -d. -f 1-2 )
-            git push origin --tags --force
-            echo "prerelease=false" >> $GITHUB_OUTPUT
-          else 
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-          fi
-
-      - uses: ncipollo/release-action@v1.12.0
+            platane/snk:latest
+            platane/snk:${{ steps.extract_version.outputs.version }}
+          build-args: |
+            VERSION=${{ steps.extract_version.outputs.version }}
+      - name: Create GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag: v${{ github.event.inputs.version }}
-          body: ${{ github.event.inputs.description }}
-          prerelease: ${{ steps.push-tags.outputs.prerelease }}
+          tag_name: v${{ steps.extract_version.outputs.version }}
+          release_name: Release v${{ steps.extract_version.outputs.version }}
+          body: |
+            Release of version ${{ steps.extract_version.outputs.version }}
+          draft: false
+          prerelease: false
