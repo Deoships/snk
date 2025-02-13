@@ -1,5 +1,3 @@
-packages/svg-creator/src/stack.ts
-
 import type { Color, Empty } from "@snk/types/grid";
 import { createAnimation } from "./css-utils";
 import { h } from "./xml-utils";
@@ -17,7 +15,7 @@ export const createStack = (
 ) => {
   const svgElements: string[] = [];
   const styles = [
-    `.u{
+    `.u{ 
       transform-origin: 0 0;
       transform: scale(0,1);
       animation: none linear ${duration}ms infinite;
