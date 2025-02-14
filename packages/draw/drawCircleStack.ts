@@ -56,31 +56,7 @@ export const getCircleSize = (n: number) => {
   };
 };
 
-export const drawCircleStack = (
-  ctx: CanvasRenderingContext2D,
-  stack: Color[],
-  o: Options
-) => {
-  for (let i = stack.length; i--; ) {
-    const { x, y } = cellPath[i];
-
-    ctx.save();
-    ctx.translate(
-      x * o.sizeCell + (o.sizeCell - o.sizeDot) / 2,
-      y * o.sizeCell + (o.sizeCell - o.sizeDot) / 2
-    );
-
-    //@ts-ignore
-    ctx.fillStyle = o.colorDots[stack[i]];
-    ctx.strokeStyle = o.colorBorder;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-
-    pathRoundedRect(ctx, o.sizeDot, o.sizeDot, o.sizeBorderRadius);
-
-    ctx.fill();
-    ctx.stroke();
-    ctx.closePath();
-    ctx.restore();
-  }
+export const drawCircleStack = () => {
+  return { svgElements: [], styles: [] }; 
 };
+
